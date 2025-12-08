@@ -118,3 +118,31 @@ private boolean tempatkanPenumpangPrioritas(Penumpang p) {
             return false;
         }
     }
+
+public boolean turunkanPenumpang(int id) {
+        for (ArrayList<Penumpang> list : new ArrayList[]{penumpangBiasa, penumpangPrioritas, penumpangBerdiri}) {
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).getId() == id) {
+                    list.remove(i);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== Daftar Penumpang Bus Trans Koetaradja ===\n");
+        sb.append("Penumpang Biasa:\n");
+        penumpangBiasa.forEach(p -> sb.append(p.toString()).append("\n")); // Lambda
+        sb.append("Penumpang Prioritas:\n");
+        penumpangPrioritas.forEach(p -> sb.append(p.toString()).append("\n"));
+        sb.append("Penumpang Berdiri:\n");
+        penumpangBerdiri.forEach(p -> sb.append(p.toString()).append("\n"));
+        sb.append("Total Penumpang: ").append(getTotalPenumpang()).append("\n");
+        sb.append("Total Pendapatan: ").append(totalPendapatan).append("\n");
+        return sb.toString();
+    }
+}
