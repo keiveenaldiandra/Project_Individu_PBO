@@ -1,4 +1,5 @@
 public abstract class Orang {
+
     protected String nama;
     protected int umur;
 
@@ -7,13 +8,8 @@ public abstract class Orang {
         this.umur = umur;
     }
 
-    public String getNama() {
-        return nama;
-    }
-
-    public int getUmur() {
-        return umur;
-    }
+    public String getNama() { return nama; }
+    public int getUmur() { return umur; }
 
     public abstract PrioritasType getPrioritasType();
 }
