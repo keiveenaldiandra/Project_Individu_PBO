@@ -1,148 +1,160 @@
-import java.util.ArrayList;
+import java.util.*;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 
 public class Bus {
-    private ArrayList<Penumpang> penumpangBiasa;
-    private ArrayList<Penumpang> penumpangPrioritas;
-    private ArrayList<Penumpang> penumpangBerdiri;
+
+    // Kapasitas bus
+    public static final int KAP_BIASA = 16;
+    public static final int KAP_PRIORITAS = 4;
+    public static final int KAP_BERDIRI = 20;
+    public static final int KAP_TOTAL = KAP_BIASA + KAP_PRIORITAS + KAP_BERDIRI;
+
     public static final int ONGKOS_BUS = 2000;
-    public static final int KAPASITAS_BIASA = 16;
-    public static final int KAPASITAS_PRIORITAS = 4;
-    public static final int KAPASITAS_BERDIRI = 20;
-    public static final int KAPASITAS_TOTAL = KAPASITAS_BIASA + KAPASITAS_PRIORITAS + KAPASITAS_BERDIRI; // Hitung otomatis, bukan hardcode 40
-    private int totalPendapatan;
 
-public Bus() {
-        penumpangBiasa = new ArrayList<>(KAPASITAS_BIASA);
-        penumpangPrioritas = new ArrayList<>(KAPASITAS_PRIORITAS);
-        penumpangBerdiri = new ArrayList<>(KAPASITAS_BERDIRI);
-        totalPendapatan = 0;
+    // Data penumpang
+    private ArrayList<Penumpang> biasa = new ArrayList<>(KAP_BIASA);
+    private ArrayList<Penumpang> prioritas = new ArrayList<>(KAP_PRIORITAS);
+    private ArrayList<Penumpang> berdiri = new ArrayList<>(KAP_BERDIRI);
+
+    // Log
+    private ArrayList<String> logAktivitas = new ArrayList<>();
+    private DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    // Pendapatan harian
+    private int totalPendapatan = 0;
+
+    // Logging internal
+    private void log(String level, String msg) {
+        if (!level.equals("NAIK") && !level.equals("TURUN")
+                && !level.equals("ERROR") && !level.equals("INFO"))
+            level = "INFO";
+
+        logAktivitas.add("[" + LocalTime.now().format(tf) + "][" + level + "] " + msg);
     }
 
-    public ArrayList<Penumpang> getPenumpangBiasa() {
-        return new ArrayList<>(penumpangBiasa); // Return copy untuk encapsulation
-    }
+    // Getter read-only
+    public List<Penumpang> getPenumpangBiasa() { return Collections.unmodifiableList(biasa); }
+    public List<Penumpang> getPenumpangPrioritas() { return Collections.unmodifiableList(prioritas); }
+    public List<Penumpang> getPenumpangBerdiri() { return Collections.unmodifiableList(berdiri); }
 
-    public ArrayList<Penumpang> getPenumpangPrioritas() {
-        return new ArrayList<>(penumpangPrioritas);
-    }
+    public int getJumlahBiasa() { return biasa.size(); }
+    public int getJumlahPrioritas() { return prioritas.size(); }
+    public int getJumlahBerdiri() { return berdiri.size(); }
 
-    public ArrayList<Penumpang> getPenumpangBerdiri() {
-        return new ArrayList<>(penumpangBerdiri);
-    }
-
-    public int getJumlahPenumpangBiasa() {
-        return penumpangBiasa.size();
-    }
-
-    public int getJumlahPenumpangPrioritas() {
-        return penumpangPrioritas.size();
-    }
-
-    public int getJumlahPenumpangBerdiri() {
-        return penumpangBerdiri.size();
-    }
-
-    public int getTotalPenumpang() {
-        return getJumlahPenumpangBiasa() + getJumlahPenumpangPrioritas() + getJumlahPenumpangBerdiri();
-    }
-
-    public Penumpang cariPenumpangById(int id) {
-        for (ArrayList<Penumpang> list : new ArrayList[]{penumpangBiasa, penumpangPrioritas, penumpangBerdiri}) {
-            for (Penumpang p : list) {
-                if (p.getId() == id) {
-                    return p;
-                }
-            }
-        }
+    // Cari penumpang dari ID unik
+    public Penumpang cariById(int id) {
+        for (Penumpang p : biasa) if (p.getId() == id) return p;
+        for (Penumpang p : prioritas) if (p.getId() == id) return p;
+        for (Penumpang p : berdiri) if (p.getId() == id) return p;
         return null;
     }
 
-private boolean tempatkanPenumpangPrioritas(Penumpang p) {
-        if (penumpangPrioritas.size() < KAPASITAS_PRIORITAS) {
-            penumpangPrioritas.add(p);
-            return true;
-        } else if (penumpangBiasa.size() < KAPASITAS_BIASA) {
-            penumpangBiasa.add(p);
-            return true;
-        } else if (penumpangBerdiri.size() < KAPASITAS_BERDIRI) {
-            penumpangBerdiri.add(p);
-            return true;
-        }
+    // Penempatan prioritas
+    private boolean tempatkanPrioritas(Penumpang p) {
+        if (prioritas.size() < KAP_PRIORITAS) { prioritas.add(p); return true; }
+        if (biasa.size() < KAP_BIASA) { biasa.add(p); return true; }
+        if (berdiri.size() < KAP_BERDIRI) { berdiri.add(p); return true; }
         return false;
     }
 
-    private boolean tempatkanPenumpangBiasa(Penumpang p) {
-        if (penumpangBiasa.size() < KAPASITAS_BIASA) {
-            penumpangBiasa.add(p);
-            return true;
-        } else if (penumpangBerdiri.size() < KAPASITAS_BERDIRI) {
-            penumpangBerdiri.add(p);
-            return true;
-        }
+    // Penempatan biasa
+    private boolean tempatkanBiasa(Penumpang p) {
+        if (biasa.size() < KAP_BIASA) { biasa.add(p); return true; }
+        if (berdiri.size() < KAP_BERDIRI) { berdiri.add(p); return true; }
         return false;
     }
 
-    public boolean naikkanPenumpang(Penumpang penumpang) {
-        if (getTotalPenumpang() >= KAPASITAS_TOTAL) {
-            System.out.println("Gagal naik: Kapasitas bus penuh.");
-            return false;
-        }
-        if (cariPenumpangById(penumpang.getId()) != null) {
-            System.out.println("Gagal naik: ID penumpang sudah ada di bus.");
+    // Naik
+    public boolean naikkanPenumpang(Penumpang p) {
+
+        if (cariById(p.getId()) != null) {
+            log("ERROR", "ID " + p.getId() + " sudah ada di bus.");
             return false;
         }
 
-        boolean adaSlot = false;
-        PrioritasType type = penumpang.getPrioritasType();
-        if (type != PrioritasType.BIASA) {
-            adaSlot = tempatkanPenumpangPrioritas(penumpang);
-        } else {
-            adaSlot = tempatkanPenumpangBiasa(penumpang);
+        int total = getJumlahBiasa() + getJumlahPrioritas() + getJumlahBerdiri();
+        if (total >= KAP_TOTAL) {
+            log("ERROR", "Bus penuh. Tidak bisa naikkan " + p.getNama());
+            return false;
         }
 
-        if (!adaSlot) {
-            System.out.println("Gagal naik: Tidak ada slot tersedia.");
+        boolean masuk;
+        if (p.getPrioritasType() == PrioritasType.BIASA)
+            masuk = tempatkanBiasa(p);
+        else
+            masuk = tempatkanPrioritas(p);
+
+        if (!masuk) {
+            log("ERROR", "Slot tidak tersedia untuk " + p.getNama());
             return false;
         }
 
         try {
-            penumpang.bayar(ONGKOS_BUS);
+            p.bayar(ONGKOS_BUS);
             totalPendapatan += ONGKOS_BUS;
+            log("NAIK", p.getNama() + " naik (ID:" + p.getId() + ")");
             return true;
+
         } catch (SaldoTidakCukupException e) {
-            // Rollback: Hapus dari semua list untuk aman (meski sebenarnya hanya satu yang terpengaruh)
-            penumpangPrioritas.remove(penumpang);
-            penumpangBiasa.remove(penumpang);
-            penumpangBerdiri.remove(penumpang);
-            System.out.println("Gagal naik: " + e.getMessage());
+
+            biasa.remove(p);
+            prioritas.remove(p);
+            berdiri.remove(p);
+
+            log("ERROR", "Pembayaran gagal untuk ID " + p.getId());
             return false;
         }
     }
 
-public boolean turunkanPenumpang(int id) {
-        for (ArrayList<Penumpang> list : new ArrayList[]{penumpangBiasa, penumpangPrioritas, penumpangBerdiri}) {
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).getId() == id) {
-                    list.remove(i);
-                    return true;
-                }
-            }
-        }
-        return false;
+    // Turun
+    public boolean turunkanPenumpang(int id) {
+
+        Penumpang t = cariById(id);
+        if (t == null) return false;
+
+        biasa.remove(t);
+        prioritas.remove(t);
+        berdiri.remove(t);
+
+        log("TURUN", t.getNama() + " turun (ID:" + t.getId() + ")");
+        return true;
     }
 
+    // ASCII Layout
+    private String layoutKursi() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("\n[PRIORITAS (").append(getJumlahPrioritas()).append("/").append(KAP_PRIORITAS).append(")]\n");
+        if (prioritas.isEmpty()) sb.append("<kosong>\n");
+        else for (Penumpang p : prioritas) sb.append("[").append(p.getNama()).append("] ");
+
+        sb.append("\n\n[BIASA (").append(getJumlahBiasa()).append("/").append(KAP_BIASA).append(")]\n");
+        if (biasa.isEmpty()) sb.append("<kosong>\n");
+        else for (Penumpang p : biasa) sb.append("[").append(p.getNama()).append("] ");
+
+        sb.append("\n\n[BERDIRI (").append(getJumlahBerdiri()).append("/").append(KAP_BERDIRI).append(")]\n");
+        if (berdiri.isEmpty()) sb.append("<kosong>\n");
+        else for (Penumpang p : berdiri) sb.append("[").append(p.getNama()).append("] ");
+
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    // Print kondisi bus
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("=== Daftar Penumpang Bus Trans Koetaradja ===\n");
-        sb.append("Penumpang Biasa:\n");
-        penumpangBiasa.forEach(p -> sb.append(p.toString()).append("\n")); // Lambda
-        sb.append("Penumpang Prioritas:\n");
-        penumpangPrioritas.forEach(p -> sb.append(p.toString()).append("\n"));
-        sb.append("Penumpang Berdiri:\n");
-        penumpangBerdiri.forEach(p -> sb.append(p.toString()).append("\n"));
-        sb.append("Total Penumpang: ").append(getTotalPenumpang()).append("\n");
-        sb.append("Total Pendapatan: ").append(totalPendapatan).append("\n");
-        return sb.toString();
+        return "===== KONDISI BUS TRANS KOETARADJA =====\n"
+                + layoutKursi()
+                + "Total Pendapatan : " + totalPendapatan + "\n"
+                + "Total Penumpang  : "
+                + (getJumlahBiasa() + getJumlahPrioritas() + getJumlahBerdiri()) + "\n"
+                + "==========================================";
+    }
+
+    public void tampilkanLog() {
+        System.out.println("===== LOG AKTIVITAS =====");
+        for (String s : logAktivitas)
+            System.out.println(s);
     }
 }
