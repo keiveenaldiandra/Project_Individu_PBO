@@ -1,4 +1,5 @@
 public class Penumpang extends Orang implements Payable {
+
     private int id;
     private boolean hamil;
     private int saldo;
@@ -7,41 +8,21 @@ public class Penumpang extends Orang implements Payable {
         super(nama, umur);
         this.id = id;
         this.hamil = hamil;
-        this.saldo = 10000; // Saldo awal
+        this.saldo = 10000;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public boolean isHamil() {
-        return hamil;
-    }
-
-    public int getSaldo() {
-        return saldo;
-    }
+    public int getId() { return id; }
+    public boolean isHamil() { return hamil; }
+    public int getSaldo() { return saldo; }
 
     public void tambahSaldo(int saldobaru) {
-        if (saldobaru > 0) {
-            this.saldo += saldobaru;
-        }
-    }
-
-// Overloading buat tambahSaldo sebagai kreativitas
-    public void tambahSaldo(int saldobaru, boolean bonus) {
-        if (bonus) {
-            this.saldo += saldobaru + 500; // Bonus 500
-        } else {
-            tambahSaldo(saldobaru);
-        }
+        if (saldobaru > 0) saldo += saldobaru;
     }
 
     @Override
     public void bayar(int ongkos) throws SaldoTidakCukupException {
-        if (saldo < ongkos) {
-            throw new SaldoTidakCukupException("Saldo tidak cukup untuk membayar ongkos sebesar " + ongkos + ". Saldo saat ini: " + saldo);
-        }
+        if (saldo < ongkos)
+            throw new SaldoTidakCukupException("Saldo kurang. Saldo saat ini: " + saldo);
         saldo -= ongkos;
     }
 
@@ -55,6 +36,7 @@ public class Penumpang extends Orang implements Payable {
 
     @Override
     public String toString() {
-        return "ID: " + id + ", Nama: " + nama + ", Umur: " + umur + ", Hamil: " + hamil + ", Saldo: " + saldo;
+        return String.format("(%d) %s | Umur:%d | Hamil:%b | Saldo:%d",
+                id, nama, umur, hamil, saldo);
     }
 }
